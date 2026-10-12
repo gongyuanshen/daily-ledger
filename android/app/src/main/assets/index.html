@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <title>日常记账</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div><p class="eyebrow">把日子，记清楚</p><h1 id="page-title">我的账本<span class="brand-dot"></span></h1></div>
+      <button class="icon-button" id="header-add" aria-label="新增一笔支出"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+    </header>
+
+    <div id="notice" class="notice" role="status" hidden></div>
+    <div id="error-panel" class="error-panel" role="alert" hidden><strong>操作未完成</strong><p id="error-message"></p><button id="retry-load" class="small-button">重新读取</button></div>
+
+    <main>
+      <section id="page-ledger" class="page" aria-label="账本">
+        <div class="hero-card">
+          <div class="hero-top"><span id="hero-month">本月支出</span><span class="local-badge"><span></span>本地账本</span></div>
+          <div class="hero-amount"><span>¥</span><strong id="month-amount">—</strong></div>
+          <div class="hero-bottom"><div><span>今天支出</span><strong id="today-amount">—</strong></div><div><span>本月笔数</span><strong id="month-count">—</strong></div><span class="hero-decoration" aria-hidden="true">↗</span></div>
+        </div>
+        <button id="add-entry" class="primary add-entry"><span aria-hidden="true">＋</span> 记一笔<span class="button-hint">记录这一刻的支出</span></button>
+        <div class="section-heading"><div><h2>支出明细</h2><p id="entries-caption">正在读取账本…</p></div><button id="open-filter" class="small-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>筛选<span id="filter-dot" hidden>·</span></button></div>
+        <div id="active-filters" class="active-filters" hidden><span id="filter-description"></span><button id="clear-filter">清除筛选</button></div>
+        <div id="entries-list" class="entries-list"></div>
+      </section>
+
+      <section id="page-calendar" class="page" aria-label="年度日历" hidden>
+        <div class="period-switch"><button id="previous-year" class="icon-button" aria-label="上一年">‹</button><label><span class="sr-only">选择年份</span><input id="calendar-year" type="number" min="1" max="9999" inputmode="numeric" required><span>年</span></label><button id="next-year" class="icon-button" aria-label="下一年">›</button></div>
+        <div class="metric-row calendar-summary"><div><span>年度支出</span><strong id="year-amount">—</strong></div><div><span>记账天数</span><strong id="year-days">—</strong></div><div><span>总笔数</span><strong id="year-count">—</strong></div></div>
+        <p class="view-note">点选日期，查看当天支出。圆点代表当天有记录。</p>
+        <div id="calendar-months" class="calendar-months"></div>
+      </section>
+
+      <section id="page-stats" class="page" aria-label="统计" hidden>
+        <div class="period-switch"><button id="previous-month" class="icon-button" aria-label="上一月">‹</button><label><span class="sr-only">统计月份</span><input id="stats-month" type="month" required></label><button id="next-month" class="icon-button" aria-label="下一月">›</button></div>
+        <div class="stats-total"><span>本月总支出</span><strong id="stats-amount">—</strong><p id="stats-count">—</p></div>
+        <div class="metric-row"><div><span>日均支出</span><strong id="daily-average">—</strong></div><div><span>当月天数</span><strong id="month-days">—</strong></div></div>
+        <div class="section-heading"><h2>月度预算</h2><button id="edit-budget" class="text-button">设置预算</button></div>
+        <div id="budget-card" class="budget-card"></div>
+        <div class="section-heading"><h2>支出分类</h2><span class="section-subtitle">占本月支出</span></div>
+        <div id="category-chart" class="chart-card"></div>
+        <div class="section-heading"><h2>每日支出</h2><span class="section-subtitle">按日期排列</span></div>
+        <div id="daily-chart" class="chart-card"></div>
+      </section>
+
+      <section id="page-more" class="page" aria-label="更多" hidden>
+        <div class="more-intro"><span class="book-icon" aria-hidden="true">记</span><div><h2>日常记账</h2><p>离线记录 · 数据保存在这台设备</p></div></div>
+        <h2 class="group-label">记账工具</h2>
+        <div class="menu-card"><button id="open-products" class="menu-item"><span class="menu-icon" aria-hidden="true">▦</span><span><strong>商品管理</strong><small>保存单价，按数量快速记账</small></span><span class="chevron" aria-hidden="true">›</span></button></div>
+        <h2 class="group-label">数据管理</h2>
+        <div class="menu-card">
+          <button id="export-backup" class="menu-item"><span class="menu-icon" aria-hidden="true">↓</span><span><strong>备份账本</strong><small>导出完整 SQLite 账本</small></span><span class="chevron" aria-hidden="true">›</span></button>
+          <button id="import-backup" class="menu-item"><span class="menu-icon" aria-hidden="true">↑</span><span><strong>恢复账本</strong><small>从备份整体替换当前账本</small></span><span class="chevron" aria-hidden="true">›</span></button>
+          <button id="export-csv" class="menu-item"><span class="menu-icon" aria-hidden="true">≡</span><span><strong>导出支出 CSV</strong><small>按照账本页面的当前筛选导出</small></span><span class="chevron" aria-hidden="true">›</span></button>
+          <button id="export-logs" class="menu-item"><span class="menu-icon" aria-hidden="true">⌘</span><span><strong>导出错误日志</strong><small>保留错误详情，方便排查</small></span><span class="chevron" aria-hidden="true">›</span></button>
+        </div>
+        <div class="privacy-note"><strong>你的数据，由你保管</strong><p>无需登录或联网。建议定期导出备份，并在换机前将备份保存到其他设备。</p><p id="runtime-info" class="runtime-info"></p></div>
+      </section>
+
+      <section id="page-products" class="page" aria-label="商品管理" hidden>
+        <div class="section-heading"><p class="view-note">单价和数量的计算由本地账本完成。</p><button id="add-product" class="small-button">＋ 新增</button></div>
+        <div id="products-list" class="products-list"></div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="主导航">
+      <button data-page="ledger" class="active" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v17H5zM9 4v17M12 9h4M12 13h4"/></svg><span>账本</span></button>
+      <button data-page="calendar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v15H4zM8 3v6M16 3v6M4 11h16M8 15h2M14 15h2"/></svg><span>日历</span></button>
+      <button data-page="stats"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M7 16v-5M12 16V5M17 16V8"/></svg><span>统计</span></button>
+      <button data-page="more"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h5v5H5zM14 5h5v5h-5zM5 14h5v5H5zM14 14h5v5h-5z"/></svg><span>更多</span></button>
+    </nav>
+  </div>
+
+  <datalist id="category-options"></datalist><datalist id="payment-options"></datalist>
+
+  <dialog id="entry-dialog" class="sheet" aria-labelledby="entry-title">
+    <div class="sheet-heading"><div><p class="eyebrow">每一笔，都算数</p><h2 id="entry-title">记一笔</h2></div><button type="button" data-close="entry-dialog" class="icon-button" aria-label="关闭记账表单">×</button></div>
+    <form id="entry-form">
+      <input id="entry-id" type="hidden">
+      <label class="amount-field"><span>支出金额（元）</span><div><span>¥</span><input id="entry-amount" name="amount" inputmode="decimal" type="text" autocomplete="off" placeholder="0.00" required maxlength="40" pattern="[0-9]+([.][0-9]{1,6})?" aria-describedby="amount-help"></div></label>
+      <p id="amount-help" class="field-help">最多六位小数，支持零金额</p>
+      <button type="button" id="choose-product" class="product-shortcut">▦ 从商品填写金额 <span aria-hidden="true">›</span></button>
+      <label class="field">日期<input id="entry-day" name="day" type="date" required></label>
+      <div class="form-columns"><label class="field">分类<input id="entry-category" name="category" list="category-options" maxlength="100" required placeholder="选择或输入分类"></label><label class="field">支付方式<input id="entry-payment" name="payment" list="payment-options" maxlength="100" required placeholder="选择或输入方式"></label></div>
+      <label class="field">备注<span class="optional">选填</span><textarea id="entry-note" name="note" rows="2" maxlength="5000" placeholder="这笔花在了哪里？"></textarea></label>
+      <p id="entry-error" class="form-error" role="alert" hidden></p>
+      <div class="sheet-actions"><button type="button" id="delete-entry" class="danger-button" hidden>删除</button><button type="submit" id="save-entry" class="primary">保存支出</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="filter-dialog" class="sheet" aria-labelledby="filter-title">
+    <div class="sheet-heading"><h2 id="filter-title">筛选支出</h2><button type="button" data-close="filter-dialog" class="icon-button" aria-label="关闭筛选">×</button></div>
+    <form id="filter-form">
+      <div class="filter-presets"><button type="button" data-range="today" class="small-button">今天</button><button type="button" data-range="month" class="small-button">本月</button><button type="button" data-range="all" class="small-button">全部时间</button></div>
+      <div class="form-columns"><label class="field">起始日期<input id="filter-start" type="date"></label><label class="field">结束日期<input id="filter-end" type="date"></label></div>
+      <label class="field">分类<select id="filter-category"><option value="">所有分类</option></select></label>
+      <label class="field">支付方式<select id="filter-payment"><option value="">所有支付方式</option></select></label>
+      <label class="field">关键词<input id="filter-keyword" type="search" maxlength="5000" placeholder="搜索备注、分类或支付方式"></label>
+      <p id="filter-error" class="form-error" role="alert" hidden></p>
+      <div class="sheet-actions"><button type="submit" class="primary">查看结果</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="budget-dialog" class="sheet" aria-labelledby="budget-title">
+    <div class="sheet-heading"><h2 id="budget-title">月度预算</h2><button type="button" data-close="budget-dialog" class="icon-button" aria-label="关闭预算表单">×</button></div>
+    <form id="budget-form"><p id="budget-month-caption" class="view-note"></p><label class="field">预算金额（元）<input id="budget-amount" type="text" inputmode="decimal" maxlength="40" required pattern="[0-9]+([.][0-9]{1,6})?" placeholder="输入大于零的金额"></label><p id="budget-error" class="form-error" role="alert" hidden></p><div class="sheet-actions"><button type="button" id="delete-budget" class="danger-button" hidden>移除预算</button><button type="submit" id="save-budget" class="primary">保存预算</button></div></form>
+  </dialog>
+
+  <dialog id="product-dialog" class="sheet" aria-labelledby="product-title">
+    <div class="sheet-heading"><h2 id="product-title">新增商品</h2><button type="button" data-close="product-dialog" class="icon-button" aria-label="关闭商品表单">×</button></div>
+    <form id="product-form"><input id="product-id" type="hidden"><label class="field">商品名称<input id="product-name" type="text" maxlength="100" required placeholder="例如：早餐"></label><label class="field">单价（元）<input id="product-price" type="text" inputmode="decimal" maxlength="40" required pattern="[0-9]+([.][0-9]{1,6})?" placeholder="0.00"></label><p class="field-help">修改商品单价不会改变已有支出。</p><p id="product-error" class="form-error" role="alert" hidden></p><div class="sheet-actions"><button type="button" id="delete-product" class="danger-button" hidden>删除商品</button><button type="submit" id="save-product" class="primary">保存商品</button></div></form>
+  </dialog>
+
+  <dialog id="product-picker-dialog" class="sheet" aria-labelledby="product-picker-title">
+    <div class="sheet-heading"><h2 id="product-picker-title">按商品记账</h2><button type="button" data-close="product-picker-dialog" class="icon-button" aria-label="关闭商品选择">×</button></div>
+    <form id="product-picker-form"><div id="picker-empty" hidden></div><label class="field">商品<select id="picker-product" required></select></label><label class="field">数量<input id="picker-quantity" type="text" inputmode="numeric" value="1" pattern="[1-9][0-9]{0,5}" required maxlength="6"></label><fieldset class="amount-mode"><legend>如何填写金额</legend><label><input type="radio" name="amount-mode" value="replace" checked> 替换当前金额</label><label><input type="radio" name="amount-mode" value="add"> 累加到当前金额</label></fieldset><p id="picker-error" class="form-error" role="alert" hidden></p><div class="sheet-actions"><button type="submit" id="apply-product" class="primary">填写金额</button></div></form>
+  </dialog>
+</body>
+</html>
